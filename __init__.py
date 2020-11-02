@@ -1,1 +1,1 @@
-from vcoclient import vcoclient
+from .vcoclient import VcoClient
