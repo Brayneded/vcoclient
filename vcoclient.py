@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 class VcoClient:
     def __init__(self, orchestrator_url):
         self.headers = {
-            'Authorization' : "Token " + os.environ['VCO301APIKEY'],
+            'Authorization' : "Token " + os.environ['VCOAPIKEY'],
             'Content-Type' : 'application/json'
         }
         self.vco = orchestrator_url
