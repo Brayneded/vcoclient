@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 class VcoClient:
     def __init__(self, orchestrator_url):
         self.headers = {
-            'Authorization' : "Token " + os.environ['VCO301APIKEY'],
+            'Authorization' : "Token " + os.environ['VCOAPIKEY'],
             'Content-Type' : 'application/json'
         }
         self.vco = orchestrator_url
@@ -32,7 +32,11 @@ class VcoClient:
 
         # Gets a list of edges within an enterprise and returns a dict
     def getEnterpriseEdges(self, enterpriseId):
-        resp = self.request('enterprise/getEnterpriseEdges', {"enterpriseId" : enterpriseId})
+        if enterpriseId == 0:
+            body = {}
+        else:
+            body = {"enterpriseId" : enterpriseId}
+        resp = self.request('enterprise/getEnterpriseEdges', body)
         return resp.json()
 
         # collects TSD data for an edge
@@ -42,7 +46,8 @@ class VcoClient:
                      "end": kwargs.get("end", self.make_orchestrator_timestamp(datetime.utcnow()))}
 
         body = {"edgeId" : edgeId, "interval" : interval}
-        body['enterpriseId'] = enterpriseId if enterpriseId is not None else 0
+        if enterpriseId != 0 :
+            body['enterpriseId'] = enterpriseId
 
         if kwargs.get("metrics") is not None:
             body['metrics'] = kwargs['metrics']
@@ -80,7 +85,8 @@ class VcoClient:
         # Create the HTTP Request Body
         body = {"edgeId" : edgeId, "interval" : interval,
                 "resolveApplicationNames": True, "limit" : -1}
-        body['enterpriseId'] = enterpriseId if enterpriseId is not None else 0
+        if enterpriseId != 0 :
+            body['enterpriseId'] = enterpriseId
 
         if kwargs.get("metrics") is not None:
             body['metrics'] = kwargs['metrics']
@@ -94,7 +100,7 @@ class VcoClient:
 
         # Gets a list of application metrics
 
-    def get_edge_app_metrics(self,enterpriseId, edgeId, **kwargs):
+    def get_edge_app_metrics(self, enterpriseId, edgeId, **kwargs):
         # Define the interval that we're pulling stats for
         interval = {"start": kwargs.get("start",
                                         self.make_orchestrator_timestamp(
@@ -110,12 +116,47 @@ class VcoClient:
         # Create the HTTP Request Body
         body = {"edgeId" : edgeId, "interval" : interval,
                 "resolveApplicationNames": True, "limit" : -1}
-        body['enterpriseId'] = enterpriseId if enterpriseId is not None else 0
+        if enterpriseId != 0 :
+            body['enterpriseId'] = enterpriseId
 
         if kwargs.get("metrics") is not None:
             body['metrics'] = kwargs['metrics']
 
         resp = self.request('metrics/getEdgeAppMetrics', body)
+        return resp.json()
+
+        # Get a list of link metrics
+
+    def get_link_quality_events(self, enterpriseId, edgeId, **kwargs):
+        pass
+
+
+
+
+    # Gets a list of metrics
+
+    def get_edge_link_series(self, enterpriseId, edgeId, **kwargs):
+        # Define the interval that we're pulling stats for
+        interval = {"start": kwargs.get("start",
+                                        self.make_orchestrator_timestamp(
+                                            datetime.utcnow() - timedelta(hours=12)
+                                            )
+                                        ),
+                    "end": kwargs.get("end",
+                                      self.make_orchestrator_timestamp(
+                                          datetime.utcnow()
+                                          )
+                                      )
+                    }
+        # Create the HTTP Request Body
+        body = {"edgeId" : edgeId, "interval" : interval }
+        if enterpriseId != 0 :
+            body['enterpriseId'] = enterpriseId
+
+        if kwargs.get("metrics") is not None:
+            body['metrics'] = kwargs['metrics']
+
+        resp = self.request('metrics/getEdgeLinkSeries', body)
         return resp.json()
 
 
