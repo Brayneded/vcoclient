@@ -56,6 +56,12 @@ class VcoClient:
                             {"enterpriseId": enterpriseId})
         return resp.json()
 
+            # Collects a list of identifiable apps from the VCO
+    def getEdgeConfigurationStack(self, enterpriseId, edgeId):
+        resp = self.request('configuration/getIdentifiableApplications',
+                            {"enterpriseId": enterpriseId, "edgeId": edgeId})
+        return resp.json()
+
         # Gets a list of application TSD
 
     def get_edge_app_series(self, enterpriseId, edgeId, **kwargs):
