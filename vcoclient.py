@@ -1,7 +1,11 @@
 import requests
 import os
+import logging
+import uuid
 from datetime import datetime, timedelta
+from requests.exceptions import HTTPError
 
+log = logging.getLogger(__name__)
 
 class VcoClient:
     """
@@ -31,14 +35,26 @@ class VcoClient:
     def request(self, method: str, body: dict) -> requests.Response:
         """
         Wraps around requests.post()
+
+
         """
+        request_id = uuid.uuid4()
+        log.info(f'request_id: {request_id} - making POST request to '\
+                 f'{self.vco}/portal/rest/{method}'
+                 )
         try:
             resp = requests.post(f'{self.vco}/portal/rest/{method}',
                                  headers=self.headers,
                                  json=body)
             resp.raise_for_status()
-        except requests.exceptions.HTTPError as err:
-            raise SystemExit(err)
+        except HTTPError as err:
+            log.error(f'request_id: {request_id} - {err}')
+
+            # If it's just a 404 return None
+            if resp.status_code == 404:
+                return None
+
+            raise err
         return resp
 
 
@@ -55,7 +71,6 @@ class VcoClient:
         """
         return timestamp.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
-
     def get_enterprise_proxy_enterprises(self) -> list:
         """
         Returns a list of Enterprises associated with an EnterpriseProxy (MSP/Partner)
@@ -64,9 +79,8 @@ class VcoClient:
             (list) : A list of Enterprise dicts
         """
         resp = self.request('enterpriseProxy/getEnterpriseProxyEnterprises', {})
-        return resp.json()
+        return resp.json() if resp is not None else None
 
-    # Gets a list of edges within an enterprise and returns a list
     def get_enterprise_edges(self, enterprise_id: int = 0) -> list:
         """
         Returns a list of Edges associated with an Enterprise (End user)
@@ -80,9 +94,8 @@ class VcoClient:
         body = {} if enterprise_id == 0 else {"enterpriseId" : enterprise_id}
 
         resp = self.request('enterprise/getEnterpriseEdges', body)
-        return resp.json()
+        return resp.json() if resp is not None else None
 
-    # collects TSD data for an edge
     def get_edge_link_series(self, enterprise_id: int, edge_id: int, **kwargs) -> list:
         """
         Returns a python object containing the link time series data for an edge
@@ -123,8 +136,16 @@ class VcoClient:
         resp = self.request('metrics/getEdgeLinkSeries', body)
         return resp.json()
 
-    # Collects a list of identifiable apps from the VCO
     def get_identifiable_applications(self, enterprise_id: int) -> list:
+        """
+        Returns a list of identifiable applications associated with an Enterprise (End user)
+
+        Parameters:
+            enterprise_id (int): The velocloud ID for an enterprise
+
+        Returns:
+            (list) : A list of application dicts
+        """
         resp = self.request('configuration/getIdentifiableApplications',
                             {"enterpriseId": enterprise_id}
                             )
