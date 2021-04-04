@@ -103,11 +103,27 @@ def test_request_error(requests_mock):
     with pytest.raises(HTTPError):
         client.request(method='test', body=test_body)
 
+def test_get_enterprise_proxy_enterprises_success(requests_mock):
+    """
+    Testing successful HTTP response to get_enterprise_proxy_enterprises
+    """
+    test_body = {"test" : "test"}
+    test_response = [{"enterpriseId" : 1}, {"enterpriseId" : 2}]
+    requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterpriseProxy/getEnterpriseProxyEnterprises',
+                        json=test_response
+                       )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_enterprise_proxy_enterprises()
+
+    assert resp == test_response
+
 def test_get_enterprise_proxy_enterprises_absent(requests_mock):
     """
     Testing 404 HTTP response to get_enterprise_proxy_enterprises
     """
-    test_body = {"test" : "test"}
+
     requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterpriseProxy/getEnterpriseProxyEnterprises',
                        status_code=404
                        )
@@ -115,5 +131,52 @@ def test_get_enterprise_proxy_enterprises_absent(requests_mock):
     client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
 
     resp = client.get_enterprise_proxy_enterprises()
+
+    assert resp is None
+
+def test_get_enterprise_edges_success_partner(requests_mock):
+    """
+    Testing successful HTTP response to get_enterprise_proxy_enterprises
+    """
+
+    test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
+    requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterprise/getEnterpriseEdges',
+                       json=test_response
+                       )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_enterprise_edges(enterprise_id = 1)
+
+    assert resp == test_response
+
+def test_get_enterprise_edges_success_enterprise(requests_mock):
+    """
+    Testing successful HTTP response to get_enterprise_edges
+    """
+
+    test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
+    requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterprise/getEnterpriseEdges',
+                       json=test_response
+                       )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_enterprise_edges()
+
+    assert resp == test_response
+
+def test_get_enterprise_edges_absent(requests_mock):
+    """
+    Testing 404 HTTP response to get_enterprise_edges
+    """
+
+    requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterprise/getEnterpriseEdges',
+                       status_code=404
+                       )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_enterprise_edges(enterprise_id = 1)
 
     assert resp is None

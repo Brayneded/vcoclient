@@ -134,9 +134,9 @@ class VcoClient:
         body.update(metrics)
 
         resp = self.request('metrics/getEdgeLinkSeries', body)
-        return resp.json()
+        return resp.json() if resp is not None else None
 
-    def get_identifiable_applications(self, enterprise_id: int) -> list:
+    def get_identifiable_applications(self, enterprise_id: int = 0) -> list:
         """
         Returns a list of identifiable applications associated with an Enterprise (End user)
 
@@ -149,21 +149,50 @@ class VcoClient:
         resp = self.request('configuration/getIdentifiableApplications',
                             {"enterpriseId": enterprise_id}
                             )
-        return resp.json()
+        return resp.json() if resp is not None else None
 
-            # Collects a list of identifiable apps from the VCO
-    def get_edge_configuration_stack(self, enterprise_id: int, edge_id: int) -> list:
+
+    def get_edge_configuration_stack(self, edge_id: int, enterprise_id: int = 0) -> list:
+        """
+        Returns a list of configurations associated with an Edges
+
+        Parameters:
+            enterprise_id (int): The velocloud ID for an enterprise
+            edge_id (int): The velocloud ID for an edge
+
+        Returns:
+            (list) : A list of configuration dicts
+        """
+        body = {"edgeId": edge_id}
+
+        enterprise = {} if enterprise_id == 0 else {"enterpriseId" : enterprise_id}
+
+        body.update(enterprise)
+
         resp = self.request('configuration/getIdentifiableApplications',
-                            {"enterpriseId": enterprise_id,
-                             "edgeId": edge_id
-                             }
+                            body
                             )
-        return resp.json()
 
-        # Gets a list of application TSD
+        return resp.json() if resp is not None else None
+
 
     def get_edge_app_series(self, enterprise_id: int, edge_id: int, **kwargs) -> list:
-        # Define the interval that we're pulling stats for
+        """
+        Returns a python object containing the application time series data for
+        from an edge during a given interval
+
+        Parameters:
+            enterprise_id (int): The velocloud ID for an enterprise
+            edge_id (int): The velocloud ID for an edge
+            metrics (dict): A dictionary containing a list of metrics to return
+                            from the orchestrator. Default behaviour is  to return
+                            all metrics
+            start (datetime): The start time for the time series data  interval
+            end (datetime): The end time for the time series data  interval
+
+        Returns:
+            json (list): A python object representing the JSON response
+        """
         interval = {"start": kwargs.get("start",
                                         self.make_orchestrator_timestamp(
                                             datetime.utcnow() - timedelta(hours=12)
@@ -175,7 +204,7 @@ class VcoClient:
                                           )
                                       )
                     }
-        # Create the HTTP Request Body
+
         body = {"edgeId" : edge_id, "interval" : interval,
                 "resolveApplicationNames": True, "limit" : -1}
 
@@ -188,7 +217,7 @@ class VcoClient:
         body.update(apps)
 
         resp = self.request('metrics/getEdgeAppSeries', body)
-        return resp.json()
+        return resp.json() if resp is not None else None
 
 
     # Gets a list of application metrics
@@ -208,17 +237,18 @@ class VcoClient:
         # Create the HTTP Request Body
         body = {"edgeId" : edge_id, "interval" : interval,
                 "resolveApplicationNames": True, "limit" : -1}
-        if enterprise_id != 0:
-            body['enterpriseId'] = enterprise_id
 
-        if kwargs.get("metrics") is not None:
-            body['metrics'] = kwargs['metrics']
+        enterprise = {} if enterprise_id == 0 else {"enterpriseId" : enterprise_id}
+        metrics = kwargs.get("metrics", {})
+
+        body.update(enterprise)
+        body.update(metrics)
 
         resp = self.request('metrics/getEdgeAppMetrics', body)
-        return resp.json()
+        return resp.json() if resp is not None else None
 
         # Get a list of link metrics
 
-    def get_link_quality_events(self,  edgeId, enterpriseId, **kwargs):
+    def get_link_quality_events(self,  edge_id: int, enterprise_id = 0, **kwargs):
         pass
 
