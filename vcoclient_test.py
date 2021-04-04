@@ -499,3 +499,81 @@ def test_get_edge_app_series_absent(requests_mock):
     assert resp is None
     assert mock.called
     assert mock.call_count == 1
+
+def test_get_edge_app_metrics_success_partner(requests_mock):
+    """
+    Testing successful HTTP response to get_edge_app_metrics as a partner
+    """
+
+
+    test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/metrics/getEdgeAppMetrics',
+                              json=test_response
+                              )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_edge_app_metrics(enterprise_id=1,
+                                       edge_id=1,
+                                       start=STARTTIMESTAMP,
+                                       end=ENDTIMESTAMP)
+
+    assert resp == test_response
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {"enterpriseId" : 1, "edgeId" : 1,
+                                        "interval" : {
+                                            "start" : DATESTRSTART,
+                                            "end" : DATESTREND},
+                                        "limit" : -1,
+                                        "resolveApplicationNames": True
+                                        }
+
+def test_get_edge_app_metrics_success_enterprise(requests_mock):
+    """
+    Testing successful HTTP response to get_edge_app_metrics as an enterprise
+    """
+
+    test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/metrics/getEdgeAppMetrics',
+                              json=test_response
+                              )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_edge_app_metrics(edge_id=1,
+                                       start=STARTTIMESTAMP,
+                                       end=ENDTIMESTAMP)
+
+    assert resp == test_response
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {"edgeId" : 1,
+                                        "interval" : {
+                                            "start" : DATESTRSTART,
+                                            "end" : DATESTREND},
+                                        "limit" : -1,
+                                        "resolveApplicationNames": True
+                                        }
+
+def test_get_edge_app_metrics_absent(requests_mock):
+    """
+    Testing 404 HTTP response to get_edge_app_metrics
+    """
+
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/metrics/getEdgeAppMetrics',
+                       status_code=404
+                       )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_edge_app_metrics(enterprise_id=1,
+                                       edge_id=1,
+                                       start=STARTTIMESTAMP,
+                                       end=ENDTIMESTAMP)
+
+    assert resp is None
+    assert mock.called
+    assert mock.call_count == 1

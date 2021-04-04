@@ -223,10 +223,10 @@ class VcoClient:
 
 
     def get_edge_app_metrics(self,
-                             enterprise_id: int,
                              edge_id: int,
                              start: datetime,
                              end: datetime,
+                             enterprise_id: int = 0,
                              **kwargs) -> list:
 
         interval = self._make_interval(start=start, end=end)
