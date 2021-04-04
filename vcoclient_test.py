@@ -1,9 +1,8 @@
-import pytest
 import os
-import requests
-from requests.exceptions import HTTPError
-from datetime import datetime
+from datetime import datetime, timedelta
 
+import pytest
+from requests.exceptions import HTTPError
 from .vcoclient import VcoClient
 
 APIKEY = 'abcd'
@@ -15,6 +14,11 @@ HEADERS = {
     }
 
 TIMESTAMP = datetime(2021, 4, 4, 12, 0, 30)
+ENDTIMESTAMP = TIMESTAMP
+STARTTIMESTAMP = TIMESTAMP - timedelta(hours=2)
+
+DATESTRSTART = '2021-04-04T10:00:30.000Z'
+DATESTREND = '2021-04-04T12:00:30.000Z'
 
 def test_vcoclient_init_env():
     """
@@ -47,16 +51,35 @@ def test_vcoclient_init_missing_key():
     with pytest.raises(ValueError):
         VcoClient(orchestrator_url=ORCHESTRATOR)
 
-def test_make_orchestrator_timestamp():
+def test__make_orchestrator_timestamp():
     """
     Testing generating an orchstrator friendly timestamp
     """
     date_str = '2021-04-04T12:00:30.000Z'
     client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
 
-    resp = client.make_orchestrator_timestamp(TIMESTAMP)
+    resp = client._make_orchestrator_timestamp(TIMESTAMP)
 
     assert date_str == resp
+
+def test__make_interval():
+    """
+    Testing generating an interval dict
+
+    """
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+
+
+    interval_dict = {'start' : DATESTRSTART,
+                     'end' : DATESTREND}
+
+
+    interval = client._make_interval(start=STARTTIMESTAMP,
+                                     end=ENDTIMESTAMP)
+
+    assert interval_dict == interval
+
 
 def test_request_success(requests_mock):
     """
@@ -107,32 +130,41 @@ def test_get_enterprise_proxy_enterprises_success(requests_mock):
     """
     Testing successful HTTP response to get_enterprise_proxy_enterprises
     """
-    test_body = {"test" : "test"}
     test_response = [{"enterpriseId" : 1}, {"enterpriseId" : 2}]
-    requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterpriseProxy/getEnterpriseProxyEnterprises',
-                        json=test_response
-                       )
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterpriseProxy/'\
+                              'getEnterpriseProxyEnterprises',
+                              json=test_response
+                              )
 
     client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
 
     resp = client.get_enterprise_proxy_enterprises()
 
     assert resp == test_response
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {}
 
 def test_get_enterprise_proxy_enterprises_absent(requests_mock):
     """
     Testing 404 HTTP response to get_enterprise_proxy_enterprises
     """
 
-    requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterpriseProxy/getEnterpriseProxyEnterprises',
-                       status_code=404
-                       )
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterpriseProxy/'\
+                              'getEnterpriseProxyEnterprises',
+                              status_code=404
+                              )
 
     client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
 
     resp = client.get_enterprise_proxy_enterprises()
 
     assert resp is None
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {}
 
 def test_get_enterprise_edges_success_partner(requests_mock):
     """
@@ -140,15 +172,19 @@ def test_get_enterprise_edges_success_partner(requests_mock):
     """
 
     test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
-    requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterprise/getEnterpriseEdges',
-                       json=test_response
-                       )
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterprise/getEnterpriseEdges',
+                              json=test_response
+                              )
 
     client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
 
-    resp = client.get_enterprise_edges(enterprise_id = 1)
+    resp = client.get_enterprise_edges(enterprise_id=1)
 
     assert resp == test_response
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {"enterpriseId" : 1}
 
 def test_get_enterprise_edges_success_enterprise(requests_mock):
     """
@@ -156,27 +192,109 @@ def test_get_enterprise_edges_success_enterprise(requests_mock):
     """
 
     test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
-    requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterprise/getEnterpriseEdges',
-                       json=test_response
-                       )
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterprise/getEnterpriseEdges',
+                              json=test_response
+                              )
 
     client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
 
     resp = client.get_enterprise_edges()
 
     assert resp == test_response
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {}
 
 def test_get_enterprise_edges_absent(requests_mock):
     """
     Testing 404 HTTP response to get_enterprise_edges
     """
 
-    requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterprise/getEnterpriseEdges',
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/enterprise/getEnterpriseEdges',
+                              status_code=404
+                              )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_enterprise_edges(enterprise_id=1)
+
+    assert resp is None
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {"enterpriseId" : 1}
+
+def test_get_edge_link_series_success_partner(requests_mock):
+    """
+    Testing successful HTTP response to get_enterprise_proxy_enterprises
+    """
+
+
+    test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/metrics/getEdgeLinkSeries',
+                              json=test_response
+                              )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_edge_link_series(enterprise_id=1,
+                                       edge_id=1,
+                                       start=STARTTIMESTAMP,
+                                       end=ENDTIMESTAMP)
+
+    assert resp == test_response
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {"enterpriseId" : 1, "edgeId" : 1,
+                                        "interval" : {
+                                            "start" : DATESTRSTART,
+                                            "end" : DATESTREND}
+                                        }
+
+def test_get_edge_link_series_success_enterprise(requests_mock):
+    """
+    Testing successful HTTP response to get_enterprise_edges
+    """
+
+    test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/metrics/getEdgeLinkSeries',
+                              json=test_response
+                              )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_edge_link_series(edge_id=1,
+                                       start=STARTTIMESTAMP,
+                                       end=ENDTIMESTAMP)
+
+    assert resp == test_response
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {"edgeId" : 1,
+                                        "interval" : {
+                                            "start" : DATESTRSTART,
+                                            "end" : DATESTREND}
+                                        }
+
+def test_get_edge_link_series_absent(requests_mock):
+    """
+    Testing 404 HTTP response to get_enterprise_edges
+    """
+
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/metrics/getEdgeLinkSeries',
                        status_code=404
                        )
 
     client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
 
-    resp = client.get_enterprise_edges(enterprise_id = 1)
+    resp = client.get_edge_link_series(enterprise_id=1,
+                                       edge_id=1,
+                                       start=STARTTIMESTAMP,
+                                       end=ENDTIMESTAMP)
 
     assert resp is None
+    assert mock.called
+    assert mock.call_count == 1

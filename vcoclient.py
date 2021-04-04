@@ -59,7 +59,7 @@ class VcoClient:
 
 
     @staticmethod
-    def make_orchestrator_timestamp(timestamp: datetime) -> str:
+    def _make_orchestrator_timestamp(timestamp: datetime) -> str:
         """
         Returns a timestamp in a format that the Velocloud Orchestrator will accept
 
@@ -70,6 +70,16 @@ class VcoClient:
                 (str): A formatted timestamp string
         """
         return timestamp.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+
+    @classmethod
+    def _make_interval(cls, start: datetime, end: datetime) -> dict:
+        """
+        Returns a dict containing an interval which is required for a number of metrics
+        """
+        start_str = cls._make_orchestrator_timestamp(start)
+        end_str = cls._make_orchestrator_timestamp(end)
+
+        return {"start" : start_str, "end" : end_str}
 
     def get_enterprise_proxy_enterprises(self) -> list:
         """
@@ -96,7 +106,12 @@ class VcoClient:
         resp = self.request('enterprise/getEnterpriseEdges', body)
         return resp.json() if resp is not None else None
 
-    def get_edge_link_series(self, enterprise_id: int, edge_id: int, **kwargs) -> list:
+    def get_edge_link_series(self,
+                             edge_id: int,
+                             start: datetime,
+                             end: datetime,
+                             enterprise_id: int = 0,
+                             **kwargs) -> list:
         """
         Returns a python object containing the link time series data for an edge
         during a given interval
@@ -113,17 +128,7 @@ class VcoClient:
         Returns:
             json (list): A python object representing the JSON response
         """
-        interval = {"start": kwargs.get("start",
-                                        self.make_orchestrator_timestamp(
-                                            datetime.utcnow() - timedelta(hours=12)
-                                            )
-                                        ),
-                    "end": kwargs.get("end",
-                                      self.make_orchestrator_timestamp(
-                                          datetime.utcnow()
-                                          )
-                                      )
-                    }
+        interval = self._make_interval(start=start, end=end)
 
 
         body = {"edgeId" : edge_id, "interval" : interval}
@@ -176,7 +181,12 @@ class VcoClient:
         return resp.json() if resp is not None else None
 
 
-    def get_edge_app_series(self, enterprise_id: int, edge_id: int, **kwargs) -> list:
+    def get_edge_app_series(self,
+                            enterprise_id: int,
+                            edge_id: int,
+                            start: datetime,
+                            end: datetime,
+                            **kwargs) -> list:
         """
         Returns a python object containing the application time series data for
         from an edge during a given interval
@@ -193,17 +203,7 @@ class VcoClient:
         Returns:
             json (list): A python object representing the JSON response
         """
-        interval = {"start": kwargs.get("start",
-                                        self.make_orchestrator_timestamp(
-                                            datetime.utcnow() - timedelta(hours=12)
-                                            )
-                                        ),
-                    "end": kwargs.get("end",
-                                      self.make_orchestrator_timestamp(
-                                          datetime.utcnow()
-                                          )
-                                      )
-                    }
+        interval = self._make_interval(start=start, end=end)
 
         body = {"edgeId" : edge_id, "interval" : interval,
                 "resolveApplicationNames": True, "limit" : -1}
@@ -221,19 +221,15 @@ class VcoClient:
 
 
     # Gets a list of application metrics
-    def get_edge_app_metrics(self, enterprise_id: int, edge_id: int, **kwargs) -> list:
+    def get_edge_app_metrics(self,
+                             enterprise_id: int,
+                             edge_id: int,
+                             start: datetime,
+                             end: datetime,
+                             **kwargs) -> list:
         # Define the interval that we're pulling stats for
-        interval = {"start": kwargs.get("start",
-                                        self.make_orchestrator_timestamp(
-                                            datetime.utcnow() - timedelta(hours=12)
-                                            )
-                                        ),
-                    "end": kwargs.get("end",
-                                      self.make_orchestrator_timestamp(
-                                          datetime.utcnow()
-                                          )
-                                      )
-                    }
+        interval = self._make_interval(start=start, end=end)
+
         # Create the HTTP Request Body
         body = {"edgeId" : edge_id, "interval" : interval,
                 "resolveApplicationNames": True, "limit" : -1}
@@ -249,6 +245,6 @@ class VcoClient:
 
         # Get a list of link metrics
 
-    def get_link_quality_events(self,  edge_id: int, enterprise_id = 0, **kwargs):
+    def get_link_quality_events(self, edge_id: int, enterprise_id: int = 0, **kwargs):
         pass
 
