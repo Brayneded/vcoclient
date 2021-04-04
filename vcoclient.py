@@ -36,7 +36,12 @@ class VcoClient:
         """
         Wraps around requests.post()
 
+            Parameters:
+                method (str): API Method that is being called
+                body (dict): A dictionary to be JSON encoded in the request
 
+            Returns:
+                (requests.Response) A HTTP Response object
         """
         request_id = uuid.uuid4()
         log.info(f'request_id: {request_id} - making POST request to '\
