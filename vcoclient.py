@@ -28,7 +28,7 @@ class VcoClient:
         }
         self.vco = orchestrator_url
 
-    def request(self, method: str, body) -> requests.Response:
+    def request(self, method: str, body: dict) -> requests.Response:
         """
         Wraps around requests.post()
         """
