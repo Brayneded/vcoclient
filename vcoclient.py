@@ -154,7 +154,7 @@ class VcoClient:
 
         body = {} if enterprise_id == 0 else {"enterpriseId" : enterprise_id}
         resp = self.request('configuration/getIdentifiableApplications',
-                            {"enterpriseId": body}
+                            body
                             )
         return resp.json() if resp is not None else None
 

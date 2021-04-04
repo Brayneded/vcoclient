@@ -298,3 +298,65 @@ def test_get_edge_link_series_absent(requests_mock):
     assert resp is None
     assert mock.called
     assert mock.call_count == 1
+
+
+def test_get_identifiable_applications_success_partner(requests_mock):
+    """
+    Testing successful HTTP response to get_enterprise_proxy_enterprises
+    """
+
+
+    test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/configuration/'\
+                              'getIdentifiableApplications',
+                              json=test_response
+                              )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_identifiable_applications(enterprise_id=1)
+
+    assert resp == test_response
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {"enterpriseId" : 1}
+
+def test_get_identifiable_applications_success_enterprise(requests_mock):
+    """
+    Testing successful HTTP response to get_enterprise_edges
+    """
+
+    test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/configuration/'\
+                              'getIdentifiableApplications',
+                              json=test_response
+                              )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_identifiable_applications()
+
+    assert resp == test_response
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {}
+
+def test_get_identifiable_applications_absent(requests_mock):
+    """
+    Testing 404 HTTP response to get_enterprise_edges
+    """
+
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/configuration/'\
+                              'getIdentifiableApplications',
+                              status_code=404
+                              )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_identifiable_applications(enterprise_id=1)
+
+    assert resp is None
+    assert mock.called
+    assert mock.call_count == 1
