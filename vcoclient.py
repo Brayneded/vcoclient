@@ -184,10 +184,10 @@ class VcoClient:
 
 
     def get_edge_app_series(self,
-                            enterprise_id: int,
                             edge_id: int,
                             start: datetime,
                             end: datetime,
+                            enterprise_id: int = 0,
                             **kwargs) -> list:
         """
         Returns a python object containing the application time series data for
