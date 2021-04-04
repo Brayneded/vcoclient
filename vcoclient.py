@@ -222,16 +222,30 @@ class VcoClient:
         return resp.json() if resp is not None else None
 
 
-    # Gets a list of application metrics
     def get_edge_app_metrics(self,
                              enterprise_id: int,
                              edge_id: int,
                              start: datetime,
                              end: datetime,
                              **kwargs) -> list:
-        # Define the interval that we're pulling stats for
-        interval = self._make_interval(start=start, end=end)
 
+        interval = self._make_interval(start=start, end=end)
+        """
+        Returns a python object containing the application metrics for
+        from an edge during a given interval
+
+        Parameters:
+            enterprise_id (int): The velocloud ID for an enterprise
+            edge_id (int): The velocloud ID for an edge
+            metrics (dict): A dictionary containing a list of metrics to return
+                            from the orchestrator. Default behaviour is  to return
+                            all metrics
+            start (datetime): The start time for the time series data  interval
+            end (datetime): The end time for the time series data  interval
+
+        Returns:
+            json (list): A python object representing the JSON response
+        """
         # Create the HTTP Request Body
         body = {"edgeId" : edge_id, "interval" : interval,
                 "resolveApplicationNames": True, "limit" : -1}

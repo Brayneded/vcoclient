@@ -227,7 +227,7 @@ def test_get_enterprise_edges_absent(requests_mock):
 
 def test_get_edge_link_series_success_partner(requests_mock):
     """
-    Testing successful HTTP response to get_enterprise_proxy_enterprises
+    Testing successful HTTP response to get_edge_link_series as a partner
     """
 
 
@@ -255,7 +255,7 @@ def test_get_edge_link_series_success_partner(requests_mock):
 
 def test_get_edge_link_series_success_enterprise(requests_mock):
     """
-    Testing successful HTTP response to get_enterprise_edges
+    Testing successful HTTP response to get_edge_link_series as an enterprise
     """
 
     test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
@@ -281,7 +281,7 @@ def test_get_edge_link_series_success_enterprise(requests_mock):
 
 def test_get_edge_link_series_absent(requests_mock):
     """
-    Testing 404 HTTP response to get_enterprise_edges
+    Testing 404 HTTP response to get_edge_link_series
     """
 
     mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/metrics/getEdgeLinkSeries',
@@ -302,7 +302,7 @@ def test_get_edge_link_series_absent(requests_mock):
 
 def test_get_identifiable_applications_success_partner(requests_mock):
     """
-    Testing successful HTTP response to get_enterprise_proxy_enterprises
+    Testing successful HTTP response to get_identifiable_applications as a partner
     """
 
 
@@ -324,7 +324,7 @@ def test_get_identifiable_applications_success_partner(requests_mock):
 
 def test_get_identifiable_applications_success_enterprise(requests_mock):
     """
-    Testing successful HTTP response to get_enterprise_edges
+    Testing successful HTTP response to get_identifiable_applications as an enterprise
     """
 
     test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
@@ -345,7 +345,7 @@ def test_get_identifiable_applications_success_enterprise(requests_mock):
 
 def test_get_identifiable_applications_absent(requests_mock):
     """
-    Testing 404 HTTP response to get_enterprise_edges
+    Testing 404 HTTP response to get_identifiable_applications
     """
 
     mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/configuration/'\
@@ -356,6 +356,67 @@ def test_get_identifiable_applications_absent(requests_mock):
     client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
 
     resp = client.get_identifiable_applications(enterprise_id=1)
+
+    assert resp is None
+    assert mock.called
+    assert mock.call_count == 1
+
+def test_get_edge_configuration_stack_partner(requests_mock):
+    """
+    Testing successful HTTP response to get_edge_configuration_stack as a partner
+    """
+
+
+    test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/configuration/'\
+                              'getIdentifiableApplications',
+                              json=test_response
+                              )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_edge_configuration_stack(enterprise_id=1, edge_id=1)
+
+    assert resp == test_response
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {"enterpriseId" : 1, "edgeId" : 1}
+
+def test_get_edge_configuration_stack_enterprise(requests_mock):
+    """
+    Testing successful HTTP response to get_edge_configuration_stack as an enterprise
+    """
+
+    test_response = [{"edgeId" : 1}, {"edgeId" : 2}]
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/configuration/'\
+                              'getIdentifiableApplications',
+                              json=test_response
+                              )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_edge_configuration_stack(edge_id=1)
+
+    assert resp == test_response
+    assert mock.called
+    assert mock.call_count == 1
+
+    assert mock.last_request.json() == {"edgeId" : 1}
+
+def test_get_edge_configuration_stack_absent(requests_mock):
+    """
+    Testing 404 HTTP response to get_edge_configuration_stack
+    """
+
+    mock = requests_mock.post(f'{ORCHESTRATOR}/portal/rest/configuration/'\
+                              'getIdentifiableApplications',
+                              status_code=404
+                              )
+
+    client = VcoClient(orchestrator_url=ORCHESTRATOR, api_key=APIKEY)
+
+    resp = client.get_edge_configuration_stack(enterprise_id=1, edge_id=1)
 
     assert resp is None
     assert mock.called
