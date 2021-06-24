@@ -181,7 +181,7 @@ class VcoClient:
 
         body.update(enterprise)
 
-        resp = self.request('configuration/getIdentifiableApplications',
+        resp = self.request('edge/getEdgeConfigurationStack',
                             body
                             )
 
