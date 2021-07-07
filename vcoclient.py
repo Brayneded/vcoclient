@@ -2,7 +2,7 @@ import requests
 import os
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from requests.exceptions import HTTPError
 
 log = logging.getLogger(__name__)
@@ -273,12 +273,15 @@ class VcoClient:
     def get_enterprise_events(self,
                               start: datetime,
                               end: datetime,
-                              enterprise_id: int = 0) -> list:
+                              edge_id: int = 0,
+                              enterprise_id: int = 0,
+                              **kwargs) -> list:
         interval = self._make_interval(start=start, end=end)
         """
         Returns a python object containing the syslog events for a given interval in an enterprise
 
         Parameters:
+            edge_id (int): The velocloud ID for an edge
             enterprise_id (int): The velocloud ID for an enterprise
             start (datetime): The start time for the time series data  interval
             end (datetime): The end time for the time series data  interval
@@ -290,8 +293,13 @@ class VcoClient:
         body = {"interval": interval}
 
         enterprise = {} if enterprise_id == 0 else {"enterpriseId" : enterprise_id}
+        edge = {} if not edge_id else {"edgeId" : edge_id}
+
+        filter = kwargs.get("filter", {})
 
         body.update(enterprise)
+        body.update(edge)
+        body.update(filter)
 
-        resp = self.request('events/getEnterpriseEvents', body)
+        resp = self.request('event/getEnterpriseEvents', body)
         return resp.json() if resp is not None else None
