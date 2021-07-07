@@ -269,3 +269,29 @@ class VcoClient:
     def get_link_quality_events(self, edge_id: int, enterprise_id: int = 0, **kwargs):
         pass
 
+
+    def get_enterprise_events(self,
+                              start: datetime,
+                              end: datetime,
+                              enterprise_id: int = 0) -> list:
+        interval = self._make_interval(start=start, end=end)
+        """
+        Returns a python object containing the syslog events for a given interval in an enterprise
+
+        Parameters:
+            enterprise_id (int): The velocloud ID for an enterprise
+            start (datetime): The start time for the time series data  interval
+            end (datetime): The end time for the time series data  interval
+
+        Returns:
+            json (list): A python object representing the JSON response
+        """
+
+        body = {"interval": interval}
+
+        enterprise = {} if enterprise_id == 0 else {"enterpriseId" : enterprise_id}
+
+        body.update(enterprise)
+
+        resp = self.request('events/getEnterpriseEvents', body)
+        return resp.json() if resp is not None else None
